@@ -7,10 +7,10 @@
 <!-- ===== デザイン ===== -->
 <style>
   :root{
-    --accent:   #7ab8ff;         /* メインブルー */
-    --accent-h: #519cff;         /* hover濃色 */
-    --bg1:      #eaf5ff;         /* 背景グラデ1 */
-    --bg2:      #d5eaff;         /* 背景グラデ2 */
+    --accent:   #7ab8ff;        /* メインブルー */
+    --accent-h: #519cff;        /* hover濃色 */
+    --bg1:      #eaf5ff;        /* 背景グラデ1 */
+    --bg2:      #d5eaff;        /* 背景グラデ2 */
     --glass:    rgba(255,255,255,0.55);
     --text:     #1e1e1e;
   }
@@ -40,16 +40,28 @@
   }
 
   h1{
-    margin:0 0 32px;
+    margin:0;                             /* ← タイトル下の余白をゼロに */
     font-size:1.9rem;
     font-weight:600;
     letter-spacing:.02em;
   }
 
-  /* ファイル選択フィールド */
+  /* 説明文 */
+  .desc{
+    margin:8px 0 28px;                    /* タイトルに寄せつつ下にスペース */
+    font-size:.95rem;
+    line-height:1.55;
+  }
+
+  /* ファイル選択＋ボタンを横並び */
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:16px;
+    margin-bottom:26px;                   /* プログレスバーとの間隔 */
+  }
   input[type="file"]{
-    display:block;
-    margin:0 auto 24px;
     font-size:.95rem;
   }
 
@@ -96,15 +108,9 @@
     overflow:hidden;
     background:rgba(0,0,0,.08);
     box-shadow:inset 0 1px 2px rgba(0,0,0,.1);
-    margin-top:26px;
   }
-  progress::-webkit-progress-bar{
-    background:transparent;
-  }
-  progress::-webkit-progress-value{
-    background:linear-gradient(90deg,var(--accent) 0%,var(--accent-h) 100%);
-    border-radius:6px;
-  }
+  progress::-webkit-progress-bar{ background:transparent; }
+  progress::-webkit-progress-value,
   progress::-moz-progress-bar{
     background:linear-gradient(90deg,var(--accent) 0%,var(--accent-h) 100%);
     border-radius:6px;
@@ -115,13 +121,19 @@
 <body>
 
   <div class="panel">
-    <h1>PDF 圧縮</h1><br>
-    ネット接続が必要ですが、ファイルはアップロードされません。<br>
-    ”圧縮”を押してから30秒ほどで圧縮PDFがダウンロードできます。
+    <h1>PDF 圧縮</h1>
 
-    <input type="file" id="file" accept="application/pdf">
+    <!-- 説明文を <p> に分離 -->
+    <p class="desc">
+      ネット接続は必要ですが、ファイルはアップロードされません。<br>
+      「圧縮」を押してから 30&nbsp;秒ほどで圧縮 PDF がダウンロードできます。
+    </p>
 
-    <button id="compress" disabled>圧縮</button>
+    <!-- ファイル選択 & ボタンを横並びに -->
+    <div class="actions">
+      <input type="file" id="file" accept="application/pdf">
+      <button id="compress" disabled>圧縮</button>
+    </div>
 
     <progress id="prog" value="0" max="100"></progress>
   </div>

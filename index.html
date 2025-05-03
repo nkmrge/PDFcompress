@@ -3,133 +3,73 @@
 <head>
 <meta charset="utf-8">
 <title>PDF Compressor (Ghostscript WASM)</title>
-
-<!-- ===== デザイン ===== -->
 <style>
   :root{
-    --accent:   #7ab8ff;        /* メインブルー */
-    --accent-h: #519cff;        /* hover濃色 */
-    --bg1:      #eaf5ff;        /* 背景グラデ1 */
-    --bg2:      #d5eaff;        /* 背景グラデ2 */
-    --glass:    rgba(255,255,255,0.55);
-    --text:     #1e1e1e;
+    --accent:#7ab8ff; --accent-h:#519cff;
+    --bg1:#eaf5ff; --bg2:#d5eaff;
+    --glass:rgba(255,255,255,.55); --text:#1e1e1e;
   }
-
-  /* 背景全体 */
   body{
-    margin:0;
-    font-family:"SF Pro Text","Helvetica Neue",sans-serif;
+    margin:0;font-family:"SF Pro Text","Helvetica Neue",sans-serif;
     background:linear-gradient(145deg,var(--bg1) 0%,var(--bg2) 100%);
-    color:var(--text);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+    color:var(--text);display:flex;flex-direction:column;align-items:center;
   }
-
-  /* 半透明カード */
   .panel{
-    margin-top:50px;
-    padding:50px 70px 60px;
-    border-radius:20px;
-    background:var(--glass);
-    box-shadow:0 8px 24px rgba(0,0,0,.12);
-    backdrop-filter:blur(20px) saturate(180%);
-    -webkit-backdrop-filter:blur(20px) saturate(180%);
-    text-align:center;
-    width:clamp(320px,70vw,500px);
+    margin-top:50px;padding:50px 70px 60px;border-radius:20px;
+    background:var(--glass);box-shadow:0 8px 24px rgba(0,0,0,.12);
+    backdrop-filter:blur(20px)saturate(180%);
+    -webkit-backdrop-filter:blur(20px)saturate(180%);
+    text-align:center;width:clamp(320px,70vw,500px);
   }
+  h1{margin:0;font-size:1.9rem;font-weight:600;letter-spacing:.02em;}
+  .desc{margin:8px 0 28px;font-size:.95rem;line-height:1.55;}
 
-  h1{
-    margin:0;                             /* ← タイトル下の余白をゼロに */
-    font-size:1.9rem;
-    font-weight:600;
-    letter-spacing:.02em;
-  }
-
-  /* 説明文 */
-  .desc{
-    margin:8px 0 28px;                    /* タイトルに寄せつつ下にスペース */
-    font-size:.95rem;
-    line-height:1.55;
-  }
-
-  /* ファイル選択＋ボタンを横並び */
+  /* ---------- ここを調整 ---------- */
   .actions{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:16px;
-    margin-bottom:26px;                   /* プログレスバーとの間隔 */
+    display:flex;flex-wrap:wrap;justify-content:center;
+    align-items:center;              /* ← 追加 */
+    gap:16px;margin-bottom:26px;
   }
   input[type="file"]{
-    font-size:.95rem;
+    font-size:.95rem;align-self:center; /* ← 追加 */
   }
+  /* -------------------------------- */
 
-  /* 圧縮ボタン */
   #compress{
-    padding:13px 34px;
-    font-size:1rem;
-    font-weight:600;
-    color:#fff;
-    background:var(--accent);
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
+    padding:13px 34px;font-size:1rem;font-weight:600;color:#fff;
+    background:var(--accent);border:none;border-radius:12px;cursor:pointer;
     transition:background .25s ease,transform .25s ease;
-    box-shadow:
-      0 2px 4px rgba(0,0,0,.12),
-      0 6px 12px rgba(0,0,0,.08) inset;
+    box-shadow:0 2px 4px rgba(0,0,0,.12),0 6px 12px rgba(0,0,0,.08) inset;
   }
-  #compress:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-    transform:none;
-    box-shadow:none;
-  }
+  #compress:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
   #compress:not(:disabled):hover{
-    background:var(--accent-h);
-    transform:translateY(-1px);
-    box-shadow:
-      0 4px 8px rgba(0,0,0,.15),
-      0 6px 14px rgba(0,0,0,.1) inset;
+    background:var(--accent-h);transform:translateY(-1px);
+    box-shadow:0 4px 8px rgba(0,0,0,.15),0 6px 14px rgba(0,0,0,.1) inset;
   }
   #compress:not(:disabled):active{
-    transform:translateY(0);
-    box-shadow:0 2px 6px rgba(0,0,0,.12) inset;
+    transform:translateY(0);box-shadow:0 2px 6px rgba(0,0,0,.12) inset;
   }
-
-  /* プログレスバー macOS 風 */
   progress{
-    appearance:none;
-    -webkit-appearance:none;
-    width:100%;
-    height:12px;
-    border-radius:6px;
-    overflow:hidden;
-    background:rgba(0,0,0,.08);
+    appearance:none;-webkit-appearance:none;width:100%;height:12px;
+    border-radius:6px;overflow:hidden;background:rgba(0,0,0,.08);
     box-shadow:inset 0 1px 2px rgba(0,0,0,.1);
   }
-  progress::-webkit-progress-bar{ background:transparent; }
-  progress::-webkit-progress-value,
-  progress::-moz-progress-bar{
+  progress::-webkit-progress-bar{background:transparent;}
+  progress::-webkit-progress-value,progress::-moz-progress-bar{
     background:linear-gradient(90deg,var(--accent) 0%,var(--accent-h) 100%);
     border-radius:6px;
   }
 </style>
 </head>
-
 <body>
 
   <div class="panel">
     <h1>PDF 圧縮</h1>
-
-    <!-- 説明文を <p> に分離 -->
     <p class="desc">
       ファイルはアップロードされません。PC上で処理されます。<br>
       「圧縮」を押してから 30&nbsp;秒ほどで圧縮 PDF がダウンロードできます。
     </p>
 
-    <!-- ファイル選択 & ボタンを横並びに -->
     <div class="actions">
       <input type="file" id="file" accept="application/pdf">
       <button id="compress" disabled>圧縮</button>
@@ -138,7 +78,6 @@
     <progress id="prog" value="0" max="100"></progress>
   </div>
 
-  <!-- ★ DOM が構築された後に読み込み／実行させる -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
